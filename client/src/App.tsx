@@ -1,66 +1,65 @@
 import * as React from 'react';
 import { useState, useEffect, useDebugValue } from 'react';
-import axios from 'axios';
 import { Subject, of } from 'rxjs';
 import { takeUntil, flatMap, concat } from 'rxjs/operators';
-import { confirmJob$, startCheck$, cancelJob$, startJob } from './data';
+import { confirmJob$, startCheck$, cancelJob$, startJob, StartInput, startJob$ } from './data';
 
-const cancel$ = new Subject();
 const startingToken = {};
 
 function useUpdater(){
   const [job, setJob] = useState<Job|undefined>();
   const [id, setId] = useState<string|object|undefined>();
+  const [message, setMessage] = useState<string|undefined>();
   useDebugValue(id, (id) => id === startingToken ? 'Starting' : id === undefined ? 'None' : id);
   useEffect(() => {
-    if(typeof id === 'object'){
-      startJob().then((job) => {
-        setJob(job);
-        setId(id);
-      })
-    } else if(typeof id === 'string') {
+    if(typeof id === 'string') {
 
-      const cancelForReal$ = cancel$
-        .pipe(flatMap(cancelJob$));
-      
       const check$ = startCheck$(id)
-        .pipe(
-          concat(of(id).pipe(flatMap(confirmJob$))),
-          takeUntil(cancel$));
+        .pipe(concat(confirmJob$(id)));
       
       const checkSub = check$.subscribe(setJob)
-      const cancelSub = cancelForReal$.subscribe(setJob);
 
       return () => {
         checkSub.unsubscribe();
-        cancelSub.unsubscribe();
       }
     }
   }, [id]);
 
-  async function startThatJob(){
-    setId(startingToken);
+  async function startThatJob(input:StartInput){
+    startJob$(input)
+      .subscribe((job) => {
+        if(job.good){
+          setJob(job);
+          setId(job.id);
+        } else {
+          setMessage("That was a bad job");
+        }
+      })
   }
-  function cancel() {
-    cancel$.next(id);
+  function clearMessage(){
+    setMessage(undefined);
   }
   return {
     job,
-    startJob:startThatJob,
-    cancel
+    startThatJob,
+    message,
+    clearMessage,
   };
 }
 
 export function UpdaterDemo(){
-  const {job, startJob, cancel} = useUpdater();
+  const {job, startThatJob, clearMessage, message} = useUpdater();
   if(job !== undefined){
     return (<div>
       <h1>Job Id: {job.id}</h1>
       {job.remaining === undefined ? false : <p>Remaining: {job.remaining}</p>}
-      <p>{job.cancelled ? 'Cancelled' : job.confirmed ? 'Confirmed' : <button onClick={cancel}>Cancel</button>}</p>
+      <p>{job.cancelled ? 'Cancelled' : job.confirmed ? 'Confirmed' : 'Running'}</p>
+      {message && <p>{message} <button onClick={clearMessage}>&times;</button></p>}
     </div>);
   }
   return <div>
-    <button onClick={startJob}>Start Job</button>
+    <button onClick={() => startThatJob({value: 'Good'})}>Start Good Job</button>&nbsp;
+    <button onClick={() => startThatJob({value: "Bad"})}>Start Bad Job</button>
+    {message && <p>{message} <button onClick={clearMessage}>&times;</button></p>}
   </div>
 }

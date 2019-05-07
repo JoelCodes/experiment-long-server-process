@@ -3,4 +3,5 @@ interface Job {
   remaining: number;
   confirmed: boolean;
   cancelled: boolean;
+  good: boolean;
 }

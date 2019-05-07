@@ -1,9 +1,10 @@
 const express = require('express');
 const {makeRandomId} = require('./utils');
+const bodyParser = require('body-parser');
 
 const app = express();
 const jobs = {};
-
+app.use(bodyParser.json({}));
 app.use(express.static('public'));
 
 const jobRouter = new express.Router();
@@ -21,7 +22,7 @@ async function runJob(id){
   }
   job.finished = new Date();
   console.log('Finished', job);
-  await delay(5 * 60 * 1000);
+  await delay(60 * 1000);
   console.log('Checked after a long time', job);
   if(!job.confirmed){
     console.log('Bad News!', job);
@@ -34,10 +35,15 @@ async function runJob(id){
 
 jobRouter
   .post('/start', (req, res) => {
+    if(req.body.value === 'Bad'){
+      res.json({ good: false });
+      return;
+    }
     const id = makeRandomId();
     jobs[id] = {
       remaining: Math.floor(Math.random() * 20) + 10,
       id,
+      good: true
     };
     runJob(id);
     res.json(jobs[id]);
