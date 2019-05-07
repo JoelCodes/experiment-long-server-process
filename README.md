@@ -1,10 +1,12 @@
 # Experimental Repo!!
 
-If you've stumbled on this repo looking for elucidation, it won't have much, truth be told.  It's just an experiment to share with my team that has to do with handling long jobs on the server-side.
+This is a prototype, not a project.  I'm just running this as a reference
 
 ## Intro
 
-All right, let's say that you're starting a long job with a lot of processing on the server side.  I don't want to go into specifics, but ours has file upload (the easy part), and then processing that file and running another web api to validate.  The process of handling and validating all that data could take a while, on the order of magnitude of 1 - 10 minutes.
+> WARNING: Intentional Vagueness Ahead!  I'm 
+
+All right, let's say that you're starting a long job with a lot of processing on the server side.  I don't want to go into specifics, but ours has file upload (the easy part), and then processing that file and running another process to validate the data.  The process of handling and validating all that data could take a while, on the order of magnitude of 1 - 10 minutes.
 
 The user should be able to:
 

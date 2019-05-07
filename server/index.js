@@ -37,9 +37,10 @@ jobRouter
     const id = makeRandomId();
     jobs[id] = {
       remaining: Math.floor(Math.random() * 20) + 10,
+      id,
     };
     runJob(id);
-    res.json(id);
+    res.json(jobs[id]);
   })
   .get('/:id/check', (req, res) => {
     res.json(jobs[req.params.id]);

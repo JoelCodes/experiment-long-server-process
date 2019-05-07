@@ -10,17 +10,21 @@ async function *gen(){
     console.log('Hit');
     await delay();
     yield i++;
-    if(i > 5) return;
+    if(i > 5) throw 'Boo';
   }
 }
 const check$ = new Observable((observer) => {
   let continuing = true;
   (async() => {
-    for await(const item of gen()){
-      if(!continuing) return;
-      observer.next(item);
+    try {
+      for await(const item of gen()){
+        if(!continuing) return;
+        observer.next(item);
+      }
+      observer.complete();
+    } catch(err){
+      observer.error(err);
     }
-    observer.complete();
   })()
   return () => {
     continuing = false;
